@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,6 +13,7 @@ namespace CASO_EMPLEADO
         static string[] nombres_empl = new string[max_emp];
         static string[] correo_empl = new string[max_emp];
         static int contador_emp = 0;
+        static string rutaArchivo = "empleados_datos.txt";
 
         static public void Title()
         {
@@ -62,7 +64,7 @@ namespace CASO_EMPLEADO
             contador_emp++;
         }
         static public void Buscar_empleado()
-        { 
+        {
             Console.WriteLine("*****BUSCAR EMPLEADO*****");
             Console.Write("************************");
             Console.WriteLine("\nIngrese el nombre del empleado a buscar: ");
@@ -95,16 +97,16 @@ namespace CASO_EMPLEADO
         }
         static public void ordenar_alfabeticamente()
         {
-            if (contador_emp<=1)
+            if (contador_emp <= 1)
             {
                 Console.WriteLine("No hay suficientes empleados para ordenar.");
                 return;
             }
-            for(int i = 0; i < contador_emp - 1; i++)
+            for (int i = 0; i < contador_emp - 1; i++)
             {
-                for (int j = 0; j < contador_emp-1-i; j++)
+                for (int j = 0; j < contador_emp - 1 - i; j++)
                 {
-                    if (string.Compare(nombres_empl[j], nombres_empl[j + 1]) > 0) 
+                    if (string.Compare(nombres_empl[j], nombres_empl[j + 1]) > 0)
                     {
                         string temp_nombre = nombres_empl[j];
                         nombres_empl[j] = nombres_empl[j + 1];
@@ -114,11 +116,11 @@ namespace CASO_EMPLEADO
                         correo_empl[j] = correo_empl[j + 1];
                         correo_empl[j + 1] = temp_correo;
                     }
-                    
+
                 }
             }
         }
-        static public void Mostrar_empleados() 
+        static public void Mostrar_empleados()
         {
             Console.WriteLine("*****LISTA DE EMPLEADOS*****");
             Console.WriteLine("****************************");
@@ -127,49 +129,126 @@ namespace CASO_EMPLEADO
                 Console.WriteLine("No hay empleados registrados.");
                 return;
             }
-            Console.WriteLine("Nombres y apellidos\t\tCorreo corporativo");
+            Console.WriteLine("Nombres y apellidos\tCorreo corporativo");
             for (int i = 0; i < contador_emp; i++)
             {
                 Console.WriteLine($"{nombres_empl[i]}\t\t{correo_empl[i]}");
             }
         }
-
-        static void Main(string[] args)
+        static public void Guardar_datos_archivo()
         {
-            int opcion = 0;
-            while (opcion != 5)
+            Console.WriteLine("*****GUARDAR DATOS EN ARCHIVO*****");
+            Console.WriteLine("**********************************");
+            if (contador_emp == 0)
             {
-                Console.Clear();
-                Title();
-                Console.WriteLine("1. Registrar empleado");
-                Console.WriteLine("2. Buscar empleado");
-                Console.WriteLine("3. Ordenar empleados alfabéticamente");
-                Console.WriteLine("4. Mostrar empleados");
-                Console.WriteLine("5. Salir");
-                Console.Write("Ingrese una opción: ");
-                if (!int.TryParse(Console.ReadLine(), out opcion))
+                Console.WriteLine("No hay empleados registrados para guardar.");
+                return;
+            }
+            using (StreamWriter escribir = new StreamWriter(rutaArchivo))
+            {
+                for (int i = 0; i < contador_emp; i++)
                 {
-                    Console.WriteLine("!!!!ERROR: Ingrese una opción numerica...!!!!");
-                    continue;
+                    escribir.WriteLine($"{nombres_empl[i]},{correo_empl[i]}");
                 }
-                switch (opcion)
+            }
+            Console.WriteLine($"{contador_emp} empleados guardados.\nDatos guardados en el archivo '{rutaArchivo}' correctamente.");
+        }
+        static public void Leer_datos_archivo()
+        {
+            Console.WriteLine("*****LEER DATOS DESDE ARCHIVO*****");
+            Console.WriteLine("**********************************");
+            if (!File.Exists(rutaArchivo))
+            {
+                Console.WriteLine($"El archivo '{rutaArchivo}' no existe.");
+                return;
+            }
+            using (StreamReader lector = new StreamReader(rutaArchivo))
+            {
+                string linea;
+                while ((linea = lector.ReadLine()) != null)
                 {
-                    case 1:
-                        RegistrarEmpleado();break;
-                    case 2:
-                        Buscar_empleado();break;
-                    case 3:
-                        ordenar_alfabeticamente();break;
-                    case 4:
-                        Mostrar_empleados();break;
-                    case 5:
-                        Console.WriteLine("Saliendo del programa...");break;
-                    default:
-                        Console.WriteLine("!!!!ERROR: Opción inválida...!!!!");break;
+                    string[] partes = linea.Split(',');
+                    if (partes.Length == 2)
+                    {
+                        Console.WriteLine($"Nombres: {partes[0]} Correo: {partes[1]}");
+                    }
                 }
-                Console.ReadKey();
-            } 
 
+            }
+        }
+
+        static public void Cargar_datos_desde_archivo()
+        {
+            Console.WriteLine("*****CARGAR DATOS DESDE ARCHIVO*****");
+            Console.WriteLine("************************************");
+            if (!File.Exists(rutaArchivo))
+            {
+                Console.WriteLine($"El archivo '{rutaArchivo}' no existe.");
+                return;
+            }
+            string[] lineas = File.ReadAllLines(rutaArchivo);
+            contador_emp = 0;
+            for (int i = 0; i < lineas.Length && i < max_emp; i++)
+            {
+                string[] partes = lineas[i].Split(',');
+                if (partes.Length == 2)
+                {
+                    nombres_empl[contador_emp] = partes[0];
+                    correo_empl[contador_emp] = partes[1];
+                    contador_emp++;
+
+                }
+
+            }
+            Console.WriteLine($"{contador_emp} empleados cargados desde el archivo '{rutaArchivo}' correctamente.");
+        }
+        static void Main(string[] args)
+            {
+                int opcion = 0;
+                while (opcion != 8)
+                {
+                    Console.Clear();
+                    Title();
+                    Console.WriteLine("1. Registrar empleado");
+                    Console.WriteLine("2. Buscar empleado");
+                    Console.WriteLine("3. Ordenar empleados alfabéticamente");
+                    Console.WriteLine("4. Mostrar empleados");
+                    Console.WriteLine("5. Guardar datos en archivo");
+                    Console.WriteLine("6. Leer datos desde archivo");
+                    Console.WriteLine("7. Cargar datos desde archivo");
+                    Console.WriteLine("8. Salir");
+                    Console.Write("Ingrese una opción: ");
+                    if (!int.TryParse(Console.ReadLine(), out opcion))
+                    {
+                        Console.WriteLine("!!!!ERROR: Ingrese una opción numerica...!!!!");
+                        continue;
+                    }
+                    switch (opcion)
+                    {
+                        case 1:
+                            RegistrarEmpleado(); break;
+                        case 2:
+                            Buscar_empleado(); break;
+                        case 3:
+                            ordenar_alfabeticamente(); break;
+                        case 4:
+                            Mostrar_empleados(); break;
+                        case 5:
+                            Guardar_datos_archivo(); break;
+                        case 6:
+                            Leer_datos_archivo(); break;
+                        case 7:
+                            Cargar_datos_desde_archivo(); break;
+                        case 8:
+                            Console.WriteLine("Saliendo del programa..."); break;
+                        default:
+                            Console.WriteLine("!!!!ERROR: Opción inválida...!!!!"); break;
+                    }
+                    Console.ReadKey();
+                }
+
+            }
         }
     }
-}
+
+
